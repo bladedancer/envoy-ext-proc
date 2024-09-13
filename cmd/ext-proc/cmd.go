@@ -4,7 +4,6 @@ import (
 	"strings"
 
 	extproc "github.com/bladedancer/envoy-ext-proc/pkg/ext-proc"
-	"github.com/bladedancer/xds-test/pkg/xds"
 	"github.com/spf13/cobra"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -49,7 +48,7 @@ func run(cmd *cobra.Command, args []string) error {
 	}
 
 	extproc.Init(logger, extprocConfig())
-	return xds.Run()
+	return extproc.Run()
 }
 
 func extprocConfig() *extproc.Config {

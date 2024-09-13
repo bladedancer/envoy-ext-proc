@@ -38,10 +38,6 @@ static_resources:
                 route:
                   cluster: target
                   auto_host_rewrite: true
-                typed_per_filter_config:
-                  envoy.filters.http.ext_proc:
-                    "@type": type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExtProcPerRoute
-                    disabled: true
 
           http_filters:
           - name: envoy.filters.http.ext_proc
@@ -96,4 +92,9 @@ static_resources:
                 address:
                   socket_address:
                     address: localhost
-                    port_value: 50051
+                    port_value: 10001
+            - endpoint:
+                address:
+                  socket_address:
+                    address: localhost
+                    port_value: 10002
