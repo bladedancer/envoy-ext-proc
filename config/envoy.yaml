@@ -34,17 +34,38 @@ static_resources:
               - "*"
               routes:
               - match:
-                  prefix: "/"
+                  prefix: "/a/"
                 route:
                   cluster: target
                   auto_host_rewrite: true
+                  regex_rewrite:
+                    pattern:
+                      regex: "^\\Q/a/\\E(.*)"
+                    substitution: "/\\1"
+                typed_per_filter_config:
+                  envoy.filters.http.ext_proc_b:
+                    "@type": "type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExtProcPerRoute"
+                    disabled: true
+
+              - match:
+                  prefix: "/b/"
+                route:
+                  cluster: target
+                  auto_host_rewrite: true
+                  regex_rewrite:
+                    pattern:
+                      regex: "^\\Q/b/\\E(.*)"
+                    substitution: "/\\1"
+                typed_per_filter_config:
+                  envoy.filters.http.ext_proc_a:
+                    "@type": "type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExtProcPerRoute"
+                    disabled: true
 
           http_filters:
-          - name: envoy.filters.http.ext_proc
+          - name: envoy.filters.http.ext_proc_a
             typed_config:
               "@type": "type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor"
               failure_mode_allow: false
-              async_mode: false
               processing_mode:
                 request_header_mode: "SEND"
                 response_header_mode: "SEND"
@@ -54,7 +75,21 @@ static_resources:
                 response_trailer_mode: "SKIP"
               grpc_service:
                 envoy_grpc:
-                  cluster_name: ext-proc
+                  cluster_name: ext-proc-a
+          - name: envoy.filters.http.ext_proc_b
+            typed_config:
+              "@type": "type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor"
+              failure_mode_allow: false
+              processing_mode:
+                request_header_mode: "SEND"
+                response_header_mode: "SEND"
+                request_body_mode: "NONE"
+                response_body_mode: "NONE"
+                request_trailer_mode: "SKIP"
+                response_trailer_mode: "SKIP"
+              grpc_service:
+                envoy_grpc:
+                  cluster_name: ext-proc-b
           - name: envoy.filters.http.router
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
@@ -79,13 +114,13 @@ static_resources:
         sni: webhook.site
     http2_protocol_options: {}
     name: target
-  - name: ext-proc
+  - name: ext-proc-a
     connect_timeout: 5s
     type: strict_dns
     lb_policy: round_robin
     http2_protocol_options: { }
     load_assignment:
-      cluster_name: ext-proc
+      cluster_name: ext-proc-a
       endpoints:
         - lb_endpoints:
             - endpoint:
@@ -93,6 +128,15 @@ static_resources:
                   socket_address:
                     address: localhost
                     port_value: 10001
+  - name: ext-proc-b
+    connect_timeout: 5s
+    type: strict_dns
+    lb_policy: round_robin
+    http2_protocol_options: { }
+    load_assignment:
+      cluster_name: ext-proc-b
+      endpoints:
+        - lb_endpoints:
             - endpoint:
                 address:
                   socket_address:
