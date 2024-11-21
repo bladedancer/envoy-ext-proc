@@ -1,6 +1,6 @@
 # External Processing Demo
 
-Simple Envoy ext_proc to test loadbalancing across multipe ext_proc services.
+Simple Envoy ext_proc to test failure processing over multipe ext_proc services.
 
 ## Build Local
 
@@ -8,13 +8,11 @@ Simple Envoy ext_proc to test loadbalancing across multipe ext_proc services.
 
 ## Run Local
 
-1) The target is webhook.site, get a GUID from there first.
+1) In separate terminals launch two instances of the ext-proc service
 
-2) In separate terminals launch two instances of the ext-proc service
+    ./bin/extprocdemo --port 10001 --successPercentage 100
 
-    ./bin/extprocdemo --port 10001
-
-    ./bin/extprocdemo --port 10002
+    ./bin/extprocdemo --port 10002 --successPercentage 50
 
 
 2) Use func-e to launch Envoy (https://func-e.io/)

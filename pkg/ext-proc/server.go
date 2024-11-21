@@ -4,14 +4,14 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"math/rand/v2"
 	"net"
 	"os"
 	"os/signal"
 	"syscall"
 
-	configPb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	filterPb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_proc/v3"
 	extProcPb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
+	typePb "github.com/envoyproxy/go-control-plane/envoy/type/v3"
 	healthPb "google.golang.org/grpc/health/grpc_health_v1"
 
 	"google.golang.org/grpc"
@@ -68,97 +68,34 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 		case *extProcPb.ProcessingRequest_RequestHeaders:
 
 			log.Println("--- In RequestHeaders processing ...")
-			r := req.Request
-			h := r.(*extProcPb.ProcessingRequest_RequestHeaders)
+			// r := req.Request
+			// h := r.(*extProcPb.ProcessingRequest_RequestHeaders)
 
-			log.Printf("Request: %+v\n", r)
-			log.Printf("Headers: %+v\n", h)
-			log.Printf("EndOfStream: %v\n", h.RequestHeaders.EndOfStream)
+			// log.Printf("Request: %+v\n", r)
+			// log.Printf("Headers: %+v\n", h)
+			// log.Printf("EndOfStream: %v\n", h.RequestHeaders.EndOfStream)
 
-			bodyMode := filterPb.ProcessingMode_BUFFERED
-
-			resp = &extProcPb.ProcessingResponse{
-				Response: &extProcPb.ProcessingResponse_RequestHeaders{
-					RequestHeaders: &extProcPb.HeadersResponse{
-						Response: &extProcPb.CommonResponse{
-							HeaderMutation: &extProcPb.HeaderMutation{
-								SetHeaders: []*configPb.HeaderValueOption{
-									{
-										Header: &configPb.HeaderValue{
-											Key:   "x-went-into-req-headers",
-											Value: "true",
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-				ModeOverride: &filterPb.ProcessingMode{
-					ResponseHeaderMode: filterPb.ProcessingMode_SEND,
-					RequestBodyMode:    bodyMode,
-				},
+			if rand.Uint32N(100) > config.SuccessPercentage {
+				log.Println("Simulating failure")
+				return status.Error(codes.Internal, "Simulated failure")
 			}
 
-		case *extProcPb.ProcessingRequest_RequestBody:
-
-			log.Println("--- In RequestBody processing")
-			r := req.Request
-			b := r.(*extProcPb.ProcessingRequest_RequestBody)
-
-			log.Printf("Request: %+v\n", r)
-			log.Printf("Body: %+v\n", b)
-			log.Printf("EndOfStream: %v\n", b.RequestBody.EndOfStream)
-
 			resp = &extProcPb.ProcessingResponse{
-				Response: &extProcPb.ProcessingResponse_RequestBody{
-					RequestBody: &extProcPb.BodyResponse{
-						Response: &extProcPb.CommonResponse{
-							HeaderMutation: &extProcPb.HeaderMutation{
-								SetHeaders: []*configPb.HeaderValueOption{
-									{
-										Header: &configPb.HeaderValue{
-											Key:   "x-went-into-req-body",
-											Value: "true",
-										},
-									},
-								},
-							},
+				Response: &extProcPb.ProcessingResponse_ImmediateResponse{
+					ImmediateResponse: &extProcPb.ImmediateResponse{
+						Status: &typePb.HttpStatus{
+							Code: 200,
 						},
-					},
-				},
-			}
-
-		case *extProcPb.ProcessingRequest_ResponseHeaders:
-
-			log.Println("--- In ResponseHeaders processing")
-			r := req.Request
-			h := r.(*extProcPb.ProcessingRequest_ResponseHeaders)
-
-			log.Printf("Request: %+v\n", r)
-			log.Printf("Headers: %+v\n", h)
-
-			resp = &extProcPb.ProcessingResponse{
-				Response: &extProcPb.ProcessingResponse_ResponseHeaders{
-					ResponseHeaders: &extProcPb.HeadersResponse{
-						Response: &extProcPb.CommonResponse{
-							HeaderMutation: &extProcPb.HeaderMutation{
-								SetHeaders: []*configPb.HeaderValueOption{
-									{
-										Header: &configPb.HeaderValue{
-											Key:   "x-went-into-resp-headers",
-											Value: "true",
-										},
-									},
-								},
-							},
+						Body: []byte("Hello from the external processor"),
+						GrpcStatus: &extProcPb.GrpcStatus{
+							Status: 0,
 						},
 					},
 				},
 			}
 
 		default:
-			log.Printf("Unknown Request type %+v\n", v)
+			log.Printf("Unhandled Request type %+v\n", v)
 		}
 
 		if err := srv.Send(resp); err != nil {

@@ -22,8 +22,10 @@ func init() {
 	RootCmd.Flags().Uint32("port", 10000, "The GRPC port to listen on.")
 	RootCmd.Flags().String("logLevel", "info", "log level")
 	RootCmd.Flags().String("logFormat", "json", "line or json")
+	RootCmd.Flags().Uint32("successPercentage", 100, "The average percent of requests that will succeed.")
 
 	bindOrPanic("port", RootCmd.Flags().Lookup("port"))
+	bindOrPanic("successPercentage", RootCmd.Flags().Lookup("successPercentage"))
 	bindOrPanic("log.level", RootCmd.Flags().Lookup("logLevel"))
 	bindOrPanic("log.format", RootCmd.Flags().Lookup("logFormat"))
 }
@@ -53,6 +55,7 @@ func run(cmd *cobra.Command, args []string) error {
 
 func extprocConfig() *extproc.Config {
 	return &extproc.Config{
-		Port: viper.GetUint32("port"),
+		Port:              viper.GetUint32("port"),
+		SuccessPercentage: viper.GetUint32("successPercentage"),
 	}
 }
