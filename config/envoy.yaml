@@ -54,6 +54,12 @@ static_resources:
               grpc_service:
                 envoy_grpc:
                   cluster_name: ext-proc
+                retry_policy:
+                  retry_back_off:
+                    base_interval: 0.5s
+                    max_interval: 60s
+                  retry_on: "resource-exhausted"
+                  num_retries: 3
           - name: envoy.filters.http.router
             typed_config:
               "@type": type.googleapis.com/envoy.extensions.filters.http.router.v3.Router

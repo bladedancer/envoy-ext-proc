@@ -23,6 +23,18 @@ import (
 type server struct{}
 type healthServer struct{}
 
+var txncount = 0
+
+func mockUtilizationCheck(srv any, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
+	log.Println("Mocking utilization check")
+
+	txncount++
+	if txncount%3 == 0 {
+		return status.Error(codes.ResourceExhausted, fmt.Sprintf("Rejecting ------------- %d", txncount))
+	}
+	return handler(srv, ss)
+}
+
 func (s *healthServer) Check(ctx context.Context, in *healthPb.HealthCheckRequest) (*healthPb.HealthCheckResponse, error) {
 	log.Printf("Handling grpc Check request + %s", in.String())
 	return &healthPb.HealthCheckResponse{Status: healthPb.HealthCheckResponse_SERVING}, nil
@@ -169,7 +181,11 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 
 // Run entry point for Envoy XDS command line.
 func Run() error {
-	grpcServer := grpc.NewServer()
+	interceptor := grpc.ChainStreamInterceptor(
+		mockUtilizationCheck,
+	)
+
+	grpcServer := grpc.NewServer(interceptor)
 	reflection.Register(grpcServer)
 	lis, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", config.Port))
 	if err != nil {
