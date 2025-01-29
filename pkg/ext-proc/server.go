@@ -29,7 +29,7 @@ func mockUtilizationCheck(srv any, ss grpc.ServerStream, info *grpc.StreamServer
 	log.Println("Mocking utilization check")
 
 	txncount++
-	if txncount%3 == 0 {
+	if txncount%2 == 0 {
 		return status.Error(codes.ResourceExhausted, fmt.Sprintf("Rejecting ------------- %d", txncount))
 	}
 	return handler(srv, ss)
@@ -46,8 +46,8 @@ func (s *healthServer) Watch(in *healthPb.HealthCheckRequest, srv healthPb.Healt
 
 // Demo Ext-Proc server
 func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
-	log.Println(" ")
-	log.Println(" ")
+	// log.Println(" ")
+	// log.Println(" ")
 	log.Println("Started process:  -->  ")
 
 	ctx := srv.Context()
@@ -69,8 +69,8 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 			return status.Errorf(codes.Unknown, "cannot receive stream request: %v", err)
 		}
 
-		log.Println(" ")
-		log.Println(" ")
+		// log.Println(" ")
+		// log.Println(" ")
 		log.Println("Got stream:  -->  ")
 
 		resp := &extProcPb.ProcessingResponse{}
@@ -80,12 +80,12 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 		case *extProcPb.ProcessingRequest_RequestHeaders:
 
 			log.Println("--- In RequestHeaders processing ...")
-			r := req.Request
-			h := r.(*extProcPb.ProcessingRequest_RequestHeaders)
+			// r := req.Request
+			// h := r.(*extProcPb.ProcessingRequest_RequestHeaders)
 
-			log.Printf("Request: %+v\n", r)
-			log.Printf("Headers: %+v\n", h)
-			log.Printf("EndOfStream: %v\n", h.RequestHeaders.EndOfStream)
+			// log.Printf("Request: %+v\n", r)
+			// log.Printf("Headers: %+v\n", h)
+			// log.Printf("EndOfStream: %v\n", h.RequestHeaders.EndOfStream)
 
 			bodyMode := filterPb.ProcessingMode_BUFFERED
 
@@ -115,12 +115,12 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 		case *extProcPb.ProcessingRequest_RequestBody:
 
 			log.Println("--- In RequestBody processing")
-			r := req.Request
-			b := r.(*extProcPb.ProcessingRequest_RequestBody)
+			// r := req.Request
+			// b := r.(*extProcPb.ProcessingRequest_RequestBody)
 
-			log.Printf("Request: %+v\n", r)
-			log.Printf("Body: %+v\n", b)
-			log.Printf("EndOfStream: %v\n", b.RequestBody.EndOfStream)
+			// log.Printf("Request: %+v\n", r)
+			// log.Printf("Body: %+v\n", b)
+			// log.Printf("EndOfStream: %v\n", b.RequestBody.EndOfStream)
 
 			resp = &extProcPb.ProcessingResponse{
 				Response: &extProcPb.ProcessingResponse_RequestBody{
@@ -144,11 +144,11 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 		case *extProcPb.ProcessingRequest_ResponseHeaders:
 
 			log.Println("--- In ResponseHeaders processing")
-			r := req.Request
-			h := r.(*extProcPb.ProcessingRequest_ResponseHeaders)
+			// r := req.Request
+			// h := r.(*extProcPb.ProcessingRequest_ResponseHeaders)
 
-			log.Printf("Request: %+v\n", r)
-			log.Printf("Headers: %+v\n", h)
+			// log.Printf("Request: %+v\n", r)
+			// log.Printf("Headers: %+v\n", h)
 
 			resp = &extProcPb.ProcessingResponse{
 				Response: &extProcPb.ProcessingResponse_ResponseHeaders{
