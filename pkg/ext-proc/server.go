@@ -10,9 +10,9 @@ import (
 	"syscall"
 
 	configPb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	filterPb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_proc/v3"
 	extProcPb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
 	healthPb "google.golang.org/grpc/health/grpc_health_v1"
+	"google.golang.org/protobuf/types/known/structpb"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -34,10 +34,6 @@ func (s *healthServer) Watch(in *healthPb.HealthCheckRequest, srv healthPb.Healt
 
 // Demo Ext-Proc server
 func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
-	log.Println(" ")
-	log.Println(" ")
-	log.Println("Started process:  -->  ")
-
 	ctx := srv.Context()
 
 	for {
@@ -57,110 +53,46 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 			return status.Errorf(codes.Unknown, "cannot receive stream request: %v", err)
 		}
 
-		log.Println(" ")
-		log.Println(" ")
-		log.Println("Got stream:  -->  ")
+		phase := req.GetMetadataContext().GetFilterMetadata()["phase"]
 
-		resp := &extProcPb.ProcessingResponse{}
-
-		switch v := req.Request.(type) {
-
-		case *extProcPb.ProcessingRequest_RequestHeaders:
-
-			log.Println("--- In RequestHeaders processing ...")
-			r := req.Request
-			h := r.(*extProcPb.ProcessingRequest_RequestHeaders)
-
-			log.Printf("Request: %+v\n", r)
-			log.Printf("Headers: %+v\n", h)
-			log.Printf("EndOfStream: %v\n", h.RequestHeaders.EndOfStream)
-
-			bodyMode := filterPb.ProcessingMode_BUFFERED
-
-			resp = &extProcPb.ProcessingResponse{
-				Response: &extProcPb.ProcessingResponse_RequestHeaders{
-					RequestHeaders: &extProcPb.HeadersResponse{
-						Response: &extProcPb.CommonResponse{
-							HeaderMutation: &extProcPb.HeaderMutation{
-								SetHeaders: []*configPb.HeaderValueOption{
-									{
-										Header: &configPb.HeaderValue{
-											Key:   "x-went-into-req-headers",
-											Value: "true",
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-				ModeOverride: &filterPb.ProcessingMode{
-					ResponseHeaderMode: filterPb.ProcessingMode_SEND,
-					RequestBodyMode:    bodyMode,
-				},
-			}
-
-		case *extProcPb.ProcessingRequest_RequestBody:
-
-			log.Println("--- In RequestBody processing")
-			r := req.Request
-			b := r.(*extProcPb.ProcessingRequest_RequestBody)
-
-			log.Printf("Request: %+v\n", r)
-			log.Printf("Body: %+v\n", b)
-			log.Printf("EndOfStream: %v\n", b.RequestBody.EndOfStream)
-
-			resp = &extProcPb.ProcessingResponse{
-				Response: &extProcPb.ProcessingResponse_RequestBody{
-					RequestBody: &extProcPb.BodyResponse{
-						Response: &extProcPb.CommonResponse{
-							HeaderMutation: &extProcPb.HeaderMutation{
-								SetHeaders: []*configPb.HeaderValueOption{
-									{
-										Header: &configPb.HeaderValue{
-											Key:   "x-went-into-req-body",
-											Value: "true",
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			}
-
-		case *extProcPb.ProcessingRequest_ResponseHeaders:
-
-			log.Println("--- In ResponseHeaders processing")
-			r := req.Request
-			h := r.(*extProcPb.ProcessingRequest_ResponseHeaders)
-
-			log.Printf("Request: %+v\n", r)
-			log.Printf("Headers: %+v\n", h)
-
-			resp = &extProcPb.ProcessingResponse{
-				Response: &extProcPb.ProcessingResponse_ResponseHeaders{
-					ResponseHeaders: &extProcPb.HeadersResponse{
-						Response: &extProcPb.CommonResponse{
-							HeaderMutation: &extProcPb.HeaderMutation{
-								SetHeaders: []*configPb.HeaderValueOption{
-									{
-										Header: &configPb.HeaderValue{
-											Key:   "x-went-into-resp-headers",
-											Value: "true",
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			}
-
-		default:
-			log.Printf("Unknown Request type %+v\n", v)
+		stage := ""
+		if phase == nil {
+			log.Printf("no phase found in metadata")
+			stage = "start"
+		} else {
+			stage = phase.GetFields()["stage"].GetStringValue()
+			stage = stage + " - next"
 		}
 
+		log.Printf("Stage: %s\n", stage)
+
+		resp := &extProcPb.ProcessingResponse{
+			DynamicMetadata: &structpb.Struct{
+				Fields: map[string]*structpb.Value{
+					"phase": structpb.NewStructValue(&structpb.Struct{
+						Fields: map[string]*structpb.Value{
+							"stage": structpb.NewStringValue(stage),
+						},
+					}),
+				},
+			},
+			Response: &extProcPb.ProcessingResponse_RequestHeaders{
+				RequestHeaders: &extProcPb.HeadersResponse{
+					Response: &extProcPb.CommonResponse{
+						HeaderMutation: &extProcPb.HeaderMutation{
+							SetHeaders: []*configPb.HeaderValueOption{
+								{
+									Header: &configPb.HeaderValue{
+										Key:   "x-went-into-req-headers",
+										Value: "true",
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		}
 		if err := srv.Send(resp); err != nil {
 			log.Printf("send error %v", err)
 		}

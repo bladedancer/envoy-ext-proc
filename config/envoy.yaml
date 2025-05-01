@@ -34,23 +34,72 @@ static_resources:
               - "*"
               routes:
               - match:
-                  prefix: "/"
+                  prefix: "/foo"
                 route:
                   cluster: target
                   auto_host_rewrite: true
 
           http_filters:
-          - name: envoy.filters.http.ext_proc
+          - name: envoy.filters.http.ext_proc_a
             typed_config:
               "@type": "type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor"
               failure_mode_allow: false
               processing_mode:
                 request_header_mode: "SEND"
-                response_header_mode: "SEND"
+                response_header_mode: "SKIP"
                 request_body_mode: "NONE"
                 response_body_mode: "NONE"
                 request_trailer_mode: "SKIP"
                 response_trailer_mode: "SKIP"
+              metadata_options:
+                forwarding_namespaces:
+                  untyped: 
+                  - phase
+                receiving_namespaces:
+                  untyped:
+                  - phase
+              grpc_service:
+                envoy_grpc:
+                  cluster_name: ext-proc
+          - name: envoy.filters.http.ext_proc_b
+            typed_config:
+              "@type": "type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor"
+              failure_mode_allow: false
+              processing_mode:
+                request_header_mode: "SEND"
+                response_header_mode: "SKIP"
+                request_body_mode: "NONE"
+                response_body_mode: "NONE"
+                request_trailer_mode: "SKIP"
+                response_trailer_mode: "SKIP"
+              metadata_options:
+                forwarding_namespaces:
+                  untyped: 
+                  - phase
+                receiving_namespaces:
+                  untyped:
+                  - phase
+              grpc_service:
+                envoy_grpc:
+                  cluster_name: ext-proc
+          - name: envoy.filters.http.ext_proc_c
+            typed_config:
+              "@type": "type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor"
+              failure_mode_allow: false
+              processing_mode:
+                request_header_mode: "SEND"
+                response_header_mode: "SKIP"
+                request_body_mode: "NONE"
+                response_body_mode: "NONE"
+                request_trailer_mode: "SKIP"
+                response_trailer_mode: "SKIP"
+              metadata_options:
+                forwarding_namespaces:
+                  untyped: 
+                  - phase
+                receiving_namespaces:
+                  untyped:
+                  - phase
               grpc_service:
                 envoy_grpc:
                   cluster_name: ext-proc
@@ -91,9 +140,4 @@ static_resources:
                 address:
                   socket_address:
                     address: localhost
-                    port_value: 10001
-            - endpoint:
-                address:
-                  socket_address:
-                    address: localhost
-                    port_value: 10002
+                    port_value: 10000
