@@ -1,6 +1,6 @@
 # External Processing Demo
 
-Simple Envoy ext_proc to test loadbalancing across multipe ext_proc services.
+Simple Envoy ext_proc to test slow ext processing.
 
 ## Build Local
 
@@ -13,8 +13,6 @@ Simple Envoy ext_proc to test loadbalancing across multipe ext_proc services.
 2) In separate terminals launch two instances of the ext-proc service
 
     ./bin/extprocdemo --port 10001
-
-    ./bin/extprocdemo --port 10002
 
 
 2) Use func-e to launch Envoy (https://func-e.io/)

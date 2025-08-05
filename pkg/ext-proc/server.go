@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	configPb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
 	filterPb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_proc/v3"
@@ -76,6 +77,8 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 			log.Printf("EndOfStream: %v\n", h.RequestHeaders.EndOfStream)
 
 			bodyMode := filterPb.ProcessingMode_BUFFERED
+
+			time.Sleep(100 * time.Second)
 
 			resp = &extProcPb.ProcessingResponse{
 				Response: &extProcPb.ProcessingResponse_RequestHeaders{

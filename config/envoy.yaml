@@ -91,9 +91,4 @@ static_resources:
                 address:
                   socket_address:
                     address: localhost
-                    port_value: 10001
-            - endpoint:
-                address:
-                  socket_address:
-                    address: localhost
-                    port_value: 10002
+                    port_value: 10000
