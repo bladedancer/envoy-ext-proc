@@ -44,10 +44,11 @@ static_resources:
             typed_config:
               "@type": "type.googleapis.com/envoy.extensions.filters.http.ext_proc.v3.ExternalProcessor"
               failure_mode_allow: false
+              message_timeout: 120s
               processing_mode:
                 request_header_mode: "SEND"
                 response_header_mode: "SEND"
-                request_body_mode: "NONE"
+                request_body_mode: "STREAMED"
                 response_body_mode: "NONE"
                 request_trailer_mode: "SKIP"
                 response_trailer_mode: "SKIP"

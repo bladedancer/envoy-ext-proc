@@ -46,4 +46,4 @@ Change to your own dockerhub repo prefix. Alternatively don't build it and just 
 
 3) Call the service
 
-    curl http://localhost:8080/03e9d944-0431-4027-b969-7022fc34e576
+    time curl -i -H "Content-Type: application/json" -X POST -d '{"key":"value"}' http://localhost:8080/03e9d944-0431-4027-b969-7022fc34e576

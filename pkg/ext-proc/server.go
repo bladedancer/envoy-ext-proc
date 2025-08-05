@@ -76,9 +76,7 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 			log.Printf("Headers: %+v\n", h)
 			log.Printf("EndOfStream: %v\n", h.RequestHeaders.EndOfStream)
 
-			bodyMode := filterPb.ProcessingMode_BUFFERED
-
-			time.Sleep(100 * time.Second)
+			bodyMode := filterPb.ProcessingMode_STREAMED
 
 			resp = &extProcPb.ProcessingResponse{
 				Response: &extProcPb.ProcessingResponse_RequestHeaders{
@@ -112,6 +110,8 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 			log.Printf("Request: %+v\n", r)
 			log.Printf("Body: %+v\n", b)
 			log.Printf("EndOfStream: %v\n", b.RequestBody.EndOfStream)
+
+			time.Sleep(130 * time.Second)
 
 			resp = &extProcPb.ProcessingResponse{
 				Response: &extProcPb.ProcessingResponse_RequestBody{
