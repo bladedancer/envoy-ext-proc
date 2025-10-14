@@ -8,10 +8,8 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
 	configPb "github.com/envoyproxy/go-control-plane/envoy/config/core/v3"
-	filterPb "github.com/envoyproxy/go-control-plane/envoy/extensions/filters/http/ext_proc/v3"
 	extProcPb "github.com/envoyproxy/go-control-plane/envoy/service/ext_proc/v3"
 	healthPb "google.golang.org/grpc/health/grpc_health_v1"
 
@@ -76,8 +74,6 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 			log.Printf("Headers: %+v\n", h)
 			log.Printf("EndOfStream: %v\n", h.RequestHeaders.EndOfStream)
 
-			bodyMode := filterPb.ProcessingMode_STREAMED
-
 			resp = &extProcPb.ProcessingResponse{
 				Response: &extProcPb.ProcessingResponse_RequestHeaders{
 					RequestHeaders: &extProcPb.HeadersResponse{
@@ -95,10 +91,6 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 						},
 					},
 				},
-				ModeOverride: &filterPb.ProcessingMode{
-					ResponseHeaderMode: filterPb.ProcessingMode_SEND,
-					RequestBodyMode:    bodyMode,
-				},
 			}
 
 		case *extProcPb.ProcessingRequest_RequestBody:
@@ -110,8 +102,6 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 			log.Printf("Request: %+v\n", r)
 			log.Printf("Body: %+v\n", b)
 			log.Printf("EndOfStream: %v\n", b.RequestBody.EndOfStream)
-
-			time.Sleep(130 * time.Second)
 
 			resp = &extProcPb.ProcessingResponse{
 				Response: &extProcPb.ProcessingResponse_RequestBody{
