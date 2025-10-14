@@ -82,8 +82,8 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 								SetHeaders: []*configPb.HeaderValueOption{
 									{
 										Header: &configPb.HeaderValue{
-											Key:   "x-went-into-req-headers",
-											Value: "true",
+											Key:      "x-went-into-req-headers",
+											RawValue: []byte("true"),
 										},
 									},
 								},
@@ -111,8 +111,8 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 								SetHeaders: []*configPb.HeaderValueOption{
 									{
 										Header: &configPb.HeaderValue{
-											Key:   "x-went-into-req-body",
-											Value: "true",
+											Key:      "x-went-into-req-body",
+											RawValue: []byte("true"),
 										},
 									},
 								},
@@ -139,8 +139,8 @@ func (s *server) Process(srv extProcPb.ExternalProcessor_ProcessServer) error {
 								SetHeaders: []*configPb.HeaderValueOption{
 									{
 										Header: &configPb.HeaderValue{
-											Key:   "x-went-into-resp-headers",
-											Value: "true",
+											Key:      "x-went-into-resp-headers",
+											RawValue: []byte("true"),
 										},
 									},
 								},
